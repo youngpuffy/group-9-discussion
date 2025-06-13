@@ -23,6 +23,13 @@ class Book(db.Model, SerializerMixin):
     author_id = db.Column(db.Integer, db.ForeignKey('author.id'), nullable=False)
 
     reviews = db.relationship('Review', secondary=book_review, backref=db.backref('books', lazy='dynamic'),lazy='dynamic')
-    
+
+class  Review(db.Model):
+    __tablename__ ='reviews'
+
+    id =db.Column(db.Integer, primary_key=True)
+    rating = db.Column(db.Integer, nullable=False)
+    comment = db.Column(db.Text, nullable=True)
+
 
 
