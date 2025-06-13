@@ -1,40 +1,44 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import MetaData
-from sqlalchemy_serializer import SerializerMixin
 
-metadata = MetaData()
-db = SQLAlchemy(metadata= metadata)
+db = SQLAlchemy()
 
-book_review =db.Table(
-    'book_review',
-    db.Column('book_id', db.Integer, db.Foreignkey('books.id'), primary_key=True),  
-     db.Column('review_id', db.Integer, db.Foreignkey('reviews.id'), primary_key=True)               
- )
-class Author(db.Model, SerializerMixin):
-    __tablename__ = 'authors'
-
+class Author(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100),nullable=False)
+    name = db.Column(db.String, nullable=False)
 
-    books = db.relationship('Book', backref='author', lazy= True)
+    books = db.relationship('Book', backref='author', cascade="all, delete-orphan")
 
-class Book(db.Model, SerializerMixin):
-    __tablename__ = 'books'
+    def to_dict(self):
+        return {"id": self.id, "name": self.name}
 
+
+class Book(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False)
-    publication_year =db.Column(db.Integer, nullable=False)
+    title = db.Column(db.String, nullable=False)
+    publication_year = db.Column(db.Integer, nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey('author.id'))
 
-    author_id = db.Column(db.Integer, db.ForeignKey('author.id'), nullable=False)
+    reviews = db.relationship('Review', backref='book', cascade="all, delete-orphan")
 
-    reviews = db.relationship('Review', secondary=book_review, backref=db.backref('books', lazy='dynamic'),lazy='dynamic')
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "publication_year": self.publication_year,
+            "author": self.author.name if self.author else None,
+            "reviews": [review.to_dict() for review in self.reviews]
+        }
 
-class  Review(db.Model):
-    __tablename__ ='reviews'
 
-    id =db.Column(db.Integer, primary_key=True)
+class Review(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
     rating = db.Column(db.Integer, nullable=False)
     comment = db.Column(db.Text, nullable=True)
+    book_id = db.Column(db.Integer, db.ForeignKey('book.id'))
 
-
-
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "rating": self.rating,
+            "comment": self.comment
+        }
