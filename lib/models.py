@@ -5,6 +5,11 @@ from sqlalchemy_serializer import SerializerMixin
 metadata = MetaData()
 db = SQLAlchemy(metadata= metadata)
 
+book_review =db.Table(
+    'book_review',
+    db.Column('book_id', db.Integer, db.Foreignkey('books.id'), primary_key=True),  
+     db.Column('review_id', db.Integer, db.Foreignkey('reviews.id'), primary_key=True)               
+ )
 class Author(db.Model, SerializerMixin):
     __tablename__ = 'authors'
 
